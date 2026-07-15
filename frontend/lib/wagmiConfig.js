@@ -8,4 +8,5 @@ export const wagmiConfig = createConfig({
   transports: {
     [monadTestnet.id]: http(),
   },
+  ssr: true,
 });
