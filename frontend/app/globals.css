@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+html, body { background: #08090D; color: #E9EBF2; font-family: 'Inter', sans-serif; }
+::selection { background: #8677F255; }
+
+@keyframes pulse { 0%,100% { opacity:1;} 50% {opacity:.35;} }

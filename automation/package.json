@@ -1,0 +1,14 @@
+{
+  "name": "wallet-ops-automation",
+  "version": "1.0.0",
+  "description": "Off-chain automation service that monitors registered wallets and calls refuel() on the WalletOpsVault contract when eligible.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "viem": "^2.21.0",
+    "dotenv": "^16.4.5"
+  }
+}
