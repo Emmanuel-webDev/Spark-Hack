@@ -13,6 +13,7 @@ import AddWalletModal from "../../components/AddWalletModal";
 import ActivityLog from "../../components/ActivityLog";
 import TelegramAlertButton from "../../components/TelegramAlertButton";
 import { Btn, SectionHeader } from "../../components/UI";
+export const dynamic = "force-dynamic";
 
 export default function Page() {
   const { isConnected } = useAccount();
