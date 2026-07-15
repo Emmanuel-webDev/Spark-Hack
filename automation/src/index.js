@@ -10,7 +10,7 @@ import { startBotListener } from "./bot-listener.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const abi = JSON.parse(
-  readFileSync(path.join(__dirname, "../../contracts/WalletOpsVault.abi.json"), "utf8")
+  readFileSync(path.join(__dirname, "WalletOpsVault.abi.json"), "utf8")
 );
 
 const {
