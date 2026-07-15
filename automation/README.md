@@ -1,6 +1,6 @@
-# Wallet Ops Automation Service
+# Refilr Automation Service
 
-Polls every registered wallet on the `WalletOpsVault` contract and submits
+Polls every registered wallet on the `Refilr` contract and submits
 `refuel()` on-chain whenever the contract's own `isRefuelEligible()` check
 says a wallet qualifies. The contract re-validates every rule itself, so
 this service only needs to decide *when* to try — it can never bypass a rule.
@@ -15,7 +15,7 @@ cp .env.example .env
 
 Fill in `.env`:
 - `RPC_URL` / `CHAIN_ID` — Monad Testnet values, double-check against Monad's docs
-- `CONTRACT_ADDRESS` — your deployed `WalletOpsVault` address
+- `CONTRACT_ADDRESS` — your deployed `Refilr` address
 - `AUTOMATION_PRIVATE_KEY` — private key of a **dedicated burner wallet**, set as the contract's `automationOperator` (via constructor or `setAutomationOperator`)
 
 Fund that automation wallet with a small amount of testnet MON to pay gas —

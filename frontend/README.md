@@ -1,6 +1,6 @@
-# Wallet Ops Frontend
+# Refilr Frontend
 
-Next.js + wagmi/viem dashboard for the WalletOpsVault contract. Reads are
+Next.js + wagmi/viem dashboard for the Refilr contract. Reads are
 live-polled (every 4-5s) directly from chain; writes go through the
 connected wallet (MetaMask via the injected connector).
 

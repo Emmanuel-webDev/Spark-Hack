@@ -1,4 +1,4 @@
-# Wallet Ops Manager — Monad Spark
+# Refilr — Monad Spark Hack
 
 Automated gas-refill vault: deposit MON, register operational wallets with
 refill policies, and let the automation service keep them topped up. The
