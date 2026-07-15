@@ -1,40 +1,36 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { formatEther } from "viem";
 import Link from "next/link";
-import { Fuel, Radio, Wallet2, Plus } from "lucide-react";
+import { Plus, Fuel } from "lucide-react";
 import { contract } from "../../lib/contract";
-import { C } from "../../lib/tokens";
+import { C, NEU } from "../../lib/tokens";
 import ConnectButton from "../../components/ConnectButton";
-import TelegramAlertButton from "../../components/TelegramAlertButton";
 import VaultPanel from "../../components/VaultPanel";
 import WalletCard from "../../components/WalletCard";
 import AddWalletModal from "../../components/AddWalletModal";
 import ActivityLog from "../../components/ActivityLog";
-import { ActionBtn } from "../../components/UI";
+import TelegramAlertButton from "../../components/TelegramAlertButton";
+import { Btn, SectionHeader } from "../../components/UI";
 
 export default function Page() {
   const { isConnected } = useAccount();
   const [showAdd, setShowAdd] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const { data: walletAddresses, refetch } = useReadContract({
-    ...contract,
-    functionName: "getRegisteredWallets",
-    query: { refetchInterval: 5000 },
+    ...contract, functionName: "getRegisteredWallets", query: { refetchInterval: 5000 },
   });
   const { data: vaultPaused } = useReadContract({
-    ...contract,
-    functionName: "paused",
-    query: { refetchInterval: 5000 },
+    ...contract, functionName: "paused", query: { refetchInterval: 5000 },
   });
 
   const addresses = walletAddresses || [];
 
-  // Single batched hook for all wallets' policies — safe with a dynamic
-  // address list, unlike calling useReadContract in a .map().
   const { data: policyResults } = useReadContracts({
-    contracts: addresses.map((addr) => ({ ...contract, functionName: "policies", args: [addr] })),
+    contracts: addresses.map(addr => ({ ...contract, functionName: "policies", args: [addr] })),
     query: { enabled: addresses.length > 0, refetchInterval: 5000 },
   });
 
@@ -43,10 +39,9 @@ export default function Page() {
     return addresses.map((address, i) => {
       const r = policyResults[i]?.result;
       if (!r) return null;
-      const [active, thresholdWei, refillAmountWei, , , , , refillsInWindow] = r;
+      const [active, thresholdWei, refillAmountWei,,,,, refillsInWindow] = r;
       return {
-        address,
-        active,
+        address, active,
         threshold: Number(formatEther(thresholdWei)),
         refillAmount: Number(formatEther(refillAmountWei)),
         refillsInWindow: Number(refillsInWindow),
@@ -54,97 +49,122 @@ export default function Page() {
     }).filter(Boolean);
   }, [policyResults, addresses]);
 
+  if (!mounted) return null;
+
   if (!isConnected) {
     return (
-      <div style={{ background: C.void, minHeight: "100vh", color: C.text }} className="flex flex-col items-center justify-center px-5 text-center">
-        <div style={{ background: C.violetDim, border: `1px solid ${C.violet}55` }} className="w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-          <Fuel size={22} color={C.violet} />
+      <div style={{
+        minHeight: "100vh", background: C.base,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 24, textAlign: "center", gap: 20,
+      }}>
+        <div style={{ background: C.base, width: 64, height: 64, borderRadius: 20, boxShadow: NEU.raised, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Fuel size={28} color={C.accent} />
         </div>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-lg font-semibold mb-2">
-          Connect a wallet to continue
-        </div>
-        <div style={{ color: C.textDim }} className="text-sm max-w-xs mb-6">
-          The dashboard reads and writes directly to the vault contract, so it needs a connected wallet on Monad Testnet.
+        <div>
+          <div style={{ fontFamily: "'Ragot',sans-serif", fontSize: 32, color: C.text1, letterSpacing: -0.5, marginBottom: 8 }}>Refilr</div>
+          <p style={{ color: C.text3, fontSize: 14, maxWidth: 300, lineHeight: 1.6 }}>
+            Connect your wallet to manage your vault and monitor your registered wallets.
+          </p>
         </div>
         <ConnectButton />
-        <Link href="/" style={{ color: C.textFaint }} className="text-xs mt-6 hover:opacity-80">
-          ← Back to home
-        </Link>
+        <Link href="/" style={{ color: C.text3, fontSize: 12, textDecoration: "none" }}>← Back to home</Link>
       </div>
     );
   }
 
   return (
-    <div style={{ background: C.void, minHeight: "100vh" }}>
-      <div style={{ borderBottom: `1px solid ${C.borderSoft}` }} className="sticky top-0 z-20">
-        <div style={{ background: `${C.void}CC` }} className="px-5 py-3 flex items-center justify-between backdrop-blur">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div style={{ background: C.violetDim, border: `1px solid ${C.violet}55` }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <Fuel size={16} color={C.violet} />
-            </div>
-            <div>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-sm font-semibold leading-none">
-                Refilr
-              </div>
-              <div style={{ color: C.textFaint, fontFamily: "'JetBrains Mono',monospace" }} className="text-[10px] tracking-wider mt-0.5">
-                MONAD TESTNET
-              </div>
-            </div>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5" style={{ color: vaultPaused ? C.textFaint : C.green }}>
-              <Radio size={12} style={{ animation: vaultPaused ? "none" : "pulse 1.6s infinite" }} />
-              <span style={{ fontFamily: "'JetBrains Mono',monospace" }} className="text-[11px]">
-                {vaultPaused ? "VAULT PAUSED" : "VAULT ACTIVE"}
+    <div style={{ minHeight: "100vh", background: C.base }}>
+      {/* topbar */}
+      <header style={{ background: C.base, boxShadow: "0 4px 12px #c4b0d055", position: "sticky", top: 0, zIndex: 20 }}>
+        <div style={{
+          maxWidth: 1160, margin: "0 auto", padding: "14px 24px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <Link href="/" style={{ fontFamily: "'Ragot',sans-serif", fontSize: 22, color: C.text1, textDecoration: "none", letterSpacing: -0.5 }}>
+              Refilr
+            </Link>
+            {/* status pill */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: C.base, boxShadow: NEU.insetSm,
+              padding: "5px 12px", borderRadius: 20,
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: vaultPaused ? C.amber : C.green,
+                display: "inline-block",
+                animation: vaultPaused ? "none" : "blink 2.5s infinite",
+              }} />
+              <span style={{ fontSize: 11, color: C.text3, fontWeight: 600 }}>
+                {vaultPaused ? "paused" : "live"}
               </span>
             </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <TelegramAlertButton />
             <ConnectButton />
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-6xl mx-auto px-5 py-6 space-y-6">
+      {/* main */}
+      <main style={{ maxWidth: 1160, margin: "0 auto", padding: "32px 24px 56px" }}>
         <VaultPanel wallets={walletSummaries} />
 
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-sm font-semibold flex items-center gap-2">
-              <Wallet2 size={15} color={C.textDim} /> Registered wallets
-            </div>
-            <ActionBtn onClick={() => setShowAdd(true)} primary>
-              <Plus size={13} /> Register wallet
-            </ActionBtn>
-          </div>
+        {/* wallets */}
+        <div style={{ marginBottom: 32 }}>
+          <SectionHeader
+            title="Wallets"
+            action={
+              <Btn accent onClick={() => setShowAdd(true)}>
+                <Plus size={14} /> Register wallet
+              </Btn>
+            }
+          />
 
           {addresses.length === 0 ? (
-            <div style={{ background: C.panel, border: `1px dashed ${C.border}`, color: C.textDim }} className="rounded-2xl p-10 text-center text-sm">
-              No wallets registered yet. Add one to start monitoring balances.
+            <div style={{
+              background: C.base, borderRadius: 20, boxShadow: NEU.inset,
+              padding: "48px 24px", textAlign: "center",
+            }}>
+              <div style={{ color: C.text3, fontSize: 14, lineHeight: 1.7 }}>
+                No wallets registered yet.<br />
+                <span style={{ fontSize: 13 }}>Register a wallet to start monitoring its balance.</span>
+              </div>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {addresses.map((addr) => (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
+              gap: 20,
+            }}>
+              {addresses.map(addr => (
                 <WalletCard key={addr} address={addr} onChange={refetch} />
               ))}
             </div>
           )}
         </div>
 
-        <div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-sm font-semibold mb-3">
-            Activity
-          </div>
-          <ActivityLog />
-        </div>
-      </div>
+        {/* activity */}
+        <SectionHeader title="Activity" />
+        <ActivityLog />
+      </main>
+
+      <style>{`
+        @media (max-width: 600px) {
+          main { padding: 20px 14px 48px !important; }
+          header > div { padding: 12px 16px !important; }
+        }
+      `}</style>
 
       {showAdd && (
         <AddWalletModal
           onClose={() => setShowAdd(false)}
-          onRegistered={() => {
-            refetch();
-            setShowAdd(false);
-          }}
+          onRegistered={() => { refetch(); setShowAdd(false); }}
         />
       )}
     </div>

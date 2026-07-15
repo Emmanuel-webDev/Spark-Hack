@@ -1,90 +1,143 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
-import { Fuel, ShieldCheck, Gauge as GaugeIcon, Zap, ArrowRight } from "lucide-react";
 import { C } from "../lib/tokens";
 
 export default function LandingPage() {
   const router = useRouter();
   const { isConnected } = useAccount();
   const { connectors, connect, isPending } = useConnect();
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    if (isConnected) router.push("/dashboard");
-  }, [isConnected, router]);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { if (isConnected) router.push("/dashboard"); }, [isConnected, router]);
 
   function handleConnect() {
-    const injectedConnector = connectors.find((c) => c.id === "injected") || connectors[0];
-    if (injectedConnector) connect({ connector: injectedConnector });
+    const c = connectors.find((c) => c.id === "injected") || connectors[0];
+    if (c) connect({ connector: c });
   }
 
   return (
-    <div style={{ background: C.void, minHeight: "100vh", color: C.text }} className="flex flex-col">
-      <div className="max-w-5xl mx-auto w-full px-6 py-6 flex items-center gap-2.5">
-        <div style={{ background: C.violetDim, border: `1px solid ${C.violet}55` }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-          <Fuel size={16} color={C.violet} />
+    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column" }}>
+      <style>{`
+        .hero-word { font-family:'Ragot',sans-serif; font-size:clamp(64px,12vw,140px); font-weight:700; line-height:0.9; letter-spacing:-2px; color:${C.accentDeep}; }
+        .hero-word-stroke { font-family:'Ragot',sans-serif; font-size:clamp(64px,12vw,140px); font-weight:700; line-height:0.9; letter-spacing:-2px; color:transparent; -webkit-text-stroke:2px ${C.accentDeep}; }
+        .nav-link { color:${C.text3}; text-decoration:none; font-size:14px; font-weight:500; transition:color 120ms; }
+        .nav-link:hover { color:${C.accent}; }
+        .cta-btn { background:${C.accent}; color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; padding:14px 32px; border-radius:6px; cursor:pointer; transition:transform 120ms,background 120ms; }
+        .cta-btn:hover { transform:scale(0.97); background:${C.accentDeep}; }
+        .cta-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .ghost-btn { background:transparent; color:${C.accent}; border:1.5px solid ${C.border}; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; padding:11px 24px; border-radius:6px; cursor:pointer; transition:transform 120ms,border-color 120ms; text-decoration:none; display:inline-block; }
+        .ghost-btn:hover { transform:scale(0.97); border-color:${C.accent}; }
+        .feature-row { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:${C.border}; border:1px solid ${C.border}; border-radius:8px; overflow:hidden; }
+        .feature-cell { background:${C.surface}; padding:28px 24px; }
+        .mono { font-family:'DM Mono',monospace; }
+        @media(max-width:640px){
+          .feature-row { grid-template-columns:1fr; }
+          .hero-split { flex-direction:column; gap:8px; }
+          .nav-links { display:none; }
+        }
+      `}</style>
+
+      {/* Nav */}
+      <nav style={{ padding:"20px 40px", display:"flex", alignItems:"center", justifyContent:"space-between", borderBottom:`1px solid ${C.border}`, background:C.bg }}>
+        <span style={{ fontFamily:"'Ragot',sans-serif", fontSize:24, color:C.accentDeep, letterSpacing:-0.5 }}>Refilr</span>
+        <div className="nav-links" style={{ display:"flex", gap:32 }}>
+          <a href="#how" className="nav-link">How it works</a>
+          <a href="#security" className="nav-link">Security</a>
         </div>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-sm font-semibold">
-          Refilr
+        {mounted && (
+          <button className="cta-btn" onClick={handleConnect} disabled={isPending} style={{ padding:"10px 24px", fontSize:14 }}>
+            {isPending ? "Connecting…" : "Launch app"}
+          </button>
+        )}
+      </nav>
+
+      {/* Hero */}
+      <section style={{ flex:1, padding:"clamp(48px,8vw,100px) clamp(24px,6vw,80px) 48px", maxWidth:1200, margin:"0 auto", width:"100%" }}>
+        <div style={{ marginBottom:20 }}>
+          <span className="mono" style={{ fontSize:11, color:C.text3, letterSpacing:"0.15em", textTransform:"uppercase", border:`1px solid ${C.border}`, padding:"4px 10px", borderRadius:20, background:C.surface }}>
+            Monad Testnet
+          </span>
         </div>
-      </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
-        <div
-          style={{ color: C.textFaint, fontFamily: "'JetBrains Mono',monospace", border: `1px solid ${C.border}`, background: C.panel }}
-          className="text-[11px] tracking-wider px-3 py-1.5 rounded-full mb-6"
-        >
-          BUILT ON MONAD TESTNET
+        <div className="hero-split" style={{ display:"flex", alignItems:"flex-end", gap:0, marginBottom:24 }}>
+          <div>
+            <div className="hero-word">Never</div>
+            <div className="hero-word">run dry</div>
+            <div className="hero-word-stroke">again.</div>
+          </div>
+          <div style={{ marginLeft:"auto", maxWidth:320, paddingBottom:8, paddingLeft:24 }}>
+            <p style={{ color:C.text2, fontSize:16, lineHeight:1.65, marginBottom:24 }}>
+              Refilr watches your onchain wallets and tops them up the moment they run low — automatically, with rules you define and a contract that enforces them.
+            </p>
+            {mounted && (
+              <button className="cta-btn" onClick={handleConnect} disabled={isPending}>
+                {isPending ? "Connecting…" : "Connect wallet to start"}
+              </button>
+            )}
+          </div>
         </div>
 
-        <h1 style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-4xl sm:text-5xl font-semibold mb-5 max-w-2xl leading-tight">
-          Refilr
-        </h1>
-        <p style={{ color: C.textDim }} className="text-base sm:text-lg max-w-xl mb-4">
-          Automated gas top-ups for your onchain wallets.
-        </p>
-        <p style={{ color: C.textDim }} className="text-sm max-w-lg mb-10 leading-relaxed">
-          Deposit MON into a secure vault, register your trading bots, relayers, and automation
-          wallets, and set a refill policy for each one. Refilr's automation service watches
-          balances and tops them up the moment they run low — every refill is verified onchain
-          by the vault contract itself, so funds only ever move when your rules say they should.
-        </p>
-
-        <button
-          onClick={handleConnect}
-          disabled={isPending}
-          style={{ background: C.violet, color: "#0A0A12" }}
-          className="flex items-center gap-2 text-sm font-medium px-5 py-3 rounded-xl transition hover:opacity-85 disabled:opacity-60"
-        >
-          {isPending ? "Connecting…" : "Connect to access dashboard"}
-          {!isPending && <ArrowRight size={15} />}
-        </button>
-
-        <div className="grid sm:grid-cols-3 gap-5 mt-20 max-w-3xl w-full text-left">
-          <Feature icon={<GaugeIcon size={16} color={C.violet} />} title="Live monitoring" text="Every registered wallet's balance is tracked against its own threshold in real time." />
-          <Feature icon={<Zap size={16} color={C.violet} />} title="Automatic refuels" text="The automation service submits a refill the moment a wallet drops below threshold." />
-          <Feature icon={<ShieldCheck size={16} color={C.violet} />} title="Contract-enforced rules" text="Cooldowns, daily limits, and vault liquidity are checked onchain — automation can only propose, never bypass." />
+        {/* live indicator strip */}
+        <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:6, width:"fit-content", marginBottom:64 }}>
+          <span style={{ width:8, height:8, borderRadius:"50%", background:C.green, display:"inline-block", animation:"blink 1.8s infinite" }} />
+          <span className="mono" style={{ fontSize:12, color:C.text3 }}>Automation service active · polling Monad RPC every 15s</span>
         </div>
-      </div>
 
-      <div style={{ color: C.textFaint, borderTop: `1px solid ${C.borderSoft}` }} className="text-[11px] text-center py-5">
-        Monad Testnet · not audited · use test funds only
-      </div>
-    </div>
-  );
-}
+        {/* How it works — asymmetric, not a 3-clone grid */}
+        <div id="how" style={{ marginBottom:64 }}>
+          <h2 style={{ fontFamily:"'Ragot',sans-serif", fontSize:"clamp(28px,4vw,44px)", color:C.text1, marginBottom:32, letterSpacing:-1 }}>
+            Four steps, zero babysitting.
+          </h2>
+          <div className="feature-row">
+            <div className="feature-cell" style={{ borderRight:`1px solid ${C.border}` }}>
+              <div className="mono" style={{ fontSize:11, color:C.text3, marginBottom:12 }}>01 — DEPOSIT</div>
+              <div style={{ fontFamily:"'Ragot',sans-serif", fontSize:28, color:C.text1, marginBottom:8, letterSpacing:-0.5 }}>Fund the vault</div>
+              <p style={{ color:C.text2, fontSize:14, lineHeight:1.65 }}>Send MON into your secure onchain vault. Only you can withdraw it. The automation service can never touch these funds directly.</p>
+            </div>
+            <div className="feature-cell">
+              <div className="mono" style={{ fontSize:11, color:C.text3, marginBottom:12 }}>02 — REGISTER</div>
+              <div style={{ fontFamily:"'Ragot',sans-serif", fontSize:28, color:C.text1, marginBottom:8, letterSpacing:-0.5 }}>Set the rules</div>
+              <p style={{ color:C.text2, fontSize:14, lineHeight:1.65 }}>Add your bot, relayer, or hot wallet. Set a threshold, refill amount, cooldown, and daily cap. Each wallet runs on its own policy.</p>
+            </div>
+            <div className="feature-cell" style={{ borderTop:`1px solid ${C.border}`, borderRight:`1px solid ${C.border}` }}>
+              <div className="mono" style={{ fontSize:11, color:C.text3, marginBottom:12 }}>03 — MONITOR</div>
+              <div style={{ fontFamily:"'Ragot',sans-serif", fontSize:28, color:C.text1, marginBottom:8, letterSpacing:-0.5 }}>Watch happens</div>
+              <p style={{ color:C.text2, fontSize:14, lineHeight:1.65 }}>The off-chain service polls balances continuously. The moment a wallet drops below its threshold, it submits a refuel request.</p>
+            </div>
+            <div className="feature-cell" style={{ borderTop:`1px solid ${C.border}` }}>
+              <div className="mono" style={{ fontSize:11, color:C.text3, marginBottom:12 }}>04 — VERIFY</div>
+              <div style={{ fontFamily:"'Ragot',sans-serif", fontSize:28, color:C.text1, marginBottom:8, letterSpacing:-0.5 }}>Contract decides</div>
+              <p style={{ color:C.text2, fontSize:14, lineHeight:1.65 }}>Every refuel request is validated onchain — cooldown, daily limit, vault liquidity, authorization. Funds only move when all rules pass.</p>
+            </div>
+          </div>
+        </div>
 
-function Feature({ icon, title, text }) {
-  return (
-    <div style={{ background: C.panel, border: `1px solid ${C.border}` }} className="rounded-xl p-4">
-      <div className="mb-2">{icon}</div>
-      <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-sm font-medium mb-1">
-        {title}
-      </div>
-      <div style={{ color: C.textDim }} className="text-xs leading-relaxed">
-        {text}
-      </div>
+        {/* Security callout — full-width, different treatment */}
+        <div id="security" style={{ background:C.accentDeep, borderRadius:8, padding:"40px 40px", marginBottom:64, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:24 }}>
+          <div>
+            <div style={{ fontFamily:"'Ragot',sans-serif", fontSize:"clamp(24px,3vw,36px)", color:"#fff", letterSpacing:-0.5, marginBottom:8 }}>
+              The service proposes. The contract decides.
+            </div>
+            <p style={{ color:C.accentSoft, fontSize:14, lineHeight:1.65, maxWidth:480 }}>
+              The automation key can only call <span className="mono" style={{ background:"#ffffff18", padding:"1px 6px", borderRadius:3 }}>refuel()</span>. It cannot withdraw, change policies, or register wallets. A compromised key cannot drain your vault faster than your own rules allow.
+            </p>
+          </div>
+          {mounted && (
+            <button className="cta-btn" onClick={handleConnect} disabled={isPending} style={{ background:"#fff", color:C.accentDeep, flexShrink:0 }}>
+              {isPending ? "Connecting…" : "Open dashboard"}
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ borderTop:`1px solid ${C.border}`, padding:"20px 40px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+        <span style={{ fontFamily:"'Ragot',sans-serif", fontSize:18, color:C.accentDeep }}>Refilr</span>
+        <span className="mono" style={{ fontSize:11, color:C.text3 }}>Monad Testnet · not audited · use test funds only</span>
+      </footer>
     </div>
   );
 }

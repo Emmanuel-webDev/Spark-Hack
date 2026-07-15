@@ -23,7 +23,7 @@ const {
   TELEGRAM_CHAT_ID,
 } = process.env;
 
-for (const [name, val] of Object.entries({ RPC_URL, CHAIN_ID, CONTRACT_ADDRESS, AUTOMATION_PRIVATE_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID })) {
+for (const [name, val] of Object.entries({ RPC_URL, CHAIN_ID, CONTRACT_ADDRESS, AUTOMATION_PRIVATE_KEY })) {
   if (!val) {
     console.error(`Missing required env var: ${name}. Copy .env.example to .env and fill it in.`);
     process.exit(1);
@@ -153,7 +153,7 @@ async function main() {
   log(`  operator: ${account.address}`);
   log(`  poll interval: ${pollIntervalMs}ms`);
 
-startTelegramNotifier(
+  startTelegramNotifier(
     publicClient,
     contract,
     TELEGRAM_BOT_TOKEN,

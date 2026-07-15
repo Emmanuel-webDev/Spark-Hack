@@ -1,10 +1,80 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@font-face {
+  font-family: 'Ragot';
+  src: url('/fonts/ragot.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* { box-sizing: border-box; }
-html, body { background: #08090D; color: #E9EBF2; font-family: 'Inter', sans-serif; }
-::selection { background: #8677F255; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-@keyframes pulse { 0%,100% { opacity:1;} 50% {opacity:.35;} }
+html, body {
+  background: #f0e6f6;
+  color: #49225B;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: #49225B33; }
+input, button { font-family: inherit; }
+
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+/* ── Landing page styles (kept here to avoid hydration mismatch) ── */
+.hero-word {
+  font-family: 'Ragot', sans-serif;
+  font-size: clamp(64px, 12vw, 140px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  color: #49225B;
+}
+.hero-word-stroke {
+  font-family: 'Ragot', sans-serif;
+  font-size: clamp(64px, 12vw, 140px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  color: transparent;
+  -webkit-text-stroke: 2px #49225B;
+}
+.nav-link { color: #A56ABD; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 120ms; }
+.nav-link:hover { color: #6E3482; }
+.cta-btn {
+  background: #6E3482; color: #fff; border: none;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 15px; font-weight: 600;
+  padding: 14px 32px; border-radius: 6px; cursor: pointer;
+  transition: transform 120ms, background 120ms;
+}
+.cta-btn:hover { transform: scale(0.97); background: #49225B; }
+.cta-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.feature-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: #D4C4DF;
+  border: 1px solid #D4C4DF; border-radius: 8px; overflow: hidden;
+}
+.feature-cell { background: #FFFFFF; padding: 28px 24px; }
+.mono { font-family: 'DM Mono', monospace; }
+.nav-links { display: flex; }
+
+@media (max-width: 640px) {
+  .feature-row { grid-template-columns: 1fr; }
+  .hero-split   { flex-direction: column !important; gap: 8px; }
+  .nav-links    { display: none; }
+}

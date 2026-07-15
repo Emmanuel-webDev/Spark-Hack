@@ -2,80 +2,65 @@
 import { useState } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
-import { X, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import { contract } from "../lib/contract";
-import { C } from "../lib/tokens";
-import { ActionBtn, LabeledInput } from "./UI";
+import { C, NEU } from "../lib/tokens";
+import { Btn, LabeledInput } from "./UI";
 
 export default function AddWalletModal({ onClose, onRegistered }) {
-  const [form, setForm] = useState({
-    address: "",
-    threshold: "0.02",
-    refillAmount: "0.1",
-    cooldown: "1800",
-    dailyLimit: "5",
-  });
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
+  const [form, setForm] = useState({ address: "", threshold: "0.02", refillAmount: "0.1", cooldown: "1800", dailyLimit: "5" });
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
   const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-    query: { enabled: !!hash },
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash, query: { enabled: !!hash } });
+  if (isSuccess) onRegistered?.(form.address);
+  const busy = isPending || isConfirming;
 
   function submit() {
     if (!form.address || !form.address.startsWith("0x") || form.address.length !== 42) return;
     writeContract({
-      ...contract,
-      functionName: "registerWallet",
-      args: [
-        form.address,
-        parseEther(form.threshold || "0"),
-        parseEther(form.refillAmount || "0"),
-        BigInt(form.cooldown || "0"),
-        BigInt(form.dailyLimit || "0"),
-      ],
+      ...contract, functionName: "registerWallet",
+      args: [form.address, parseEther(form.threshold || "0"), parseEther(form.refillAmount || "0"),
+             BigInt(form.cooldown || "0"), BigInt(form.dailyLimit || "0")],
     });
   }
 
-  if (isSuccess) {
-    onRegistered?.(form.address);
-  }
-
-  const busy = isPending || isConfirming;
-
   return (
-    <div style={{ background: "#000000AA" }} className="fixed inset-0 z-30 flex items-center justify-center p-4">
-      <div style={{ background: C.panel, border: `1px solid ${C.border}` }} className="rounded-2xl p-5 w-full max-w-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif" }} className="text-sm font-semibold">
-            Register wallet
-          </div>
-          <button onClick={onClose}>
-            <X size={16} color={C.textDim} />
+    <div style={{ position: "fixed", inset: 0, background: "#49225B44", backdropFilter: "blur(4px)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{
+        background: C.base, borderRadius: 24, boxShadow: NEU.raised,
+        padding: 28, width: "100%", maxWidth: 400, maxHeight: "90vh", overflowY: "auto",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+          <span style={{ fontFamily: "'Ragot',sans-serif", fontSize: 22, color: C.text1, letterSpacing: -0.5 }}>Register wallet</span>
+          <button onClick={onClose} style={{
+            background: C.base, border: "none", cursor: "pointer", padding: 8,
+            borderRadius: 8, boxShadow: NEU.raisedSm, display: "flex", alignItems: "center",
+          }}>
+            <X size={15} color={C.text3} />
           </button>
         </div>
-        <div className="space-y-3">
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <LabeledInput label="Wallet address" value={form.address} onChange={set("address")} placeholder="0x…" mono />
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <LabeledInput label="Threshold (MON)" value={form.threshold} onChange={set("threshold")} mono />
-            <LabeledInput label="Refill amount (MON)" value={form.refillAmount} onChange={set("refillAmount")} mono />
-            <LabeledInput label="Cooldown (sec)" value={form.cooldown} onChange={set("cooldown")} mono />
-            <LabeledInput label="Daily limit" value={form.dailyLimit} onChange={set("dailyLimit")} mono />
+            <LabeledInput label="Refill (MON)"    value={form.refillAmount} onChange={set("refillAmount")} mono />
+            <LabeledInput label="Cooldown (sec)"  value={form.cooldown} onChange={set("cooldown")} mono />
+            <LabeledInput label="Daily limit"     value={form.dailyLimit} onChange={set("dailyLimit")} mono />
           </div>
         </div>
+
         {error && (
-          <div style={{ color: C.red }} className="text-[11px] mt-3">
+          <div style={{ color: C.red, fontSize: 12, marginTop: 14, padding: "8px 12px", background: C.redSoft, borderRadius: 8 }}>
             {error.shortMessage || error.message}
           </div>
         )}
-        <div className="flex gap-2 mt-5">
-          <ActionBtn onClick={onClose} disabled={busy}>
-            Cancel
-          </ActionBtn>
-          <ActionBtn primary onClick={submit} disabled={busy}>
-            {busy ? "Confirming…" : "Register"} <ChevronRight size={13} />
-          </ActionBtn>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+          <Btn onClick={onClose} disabled={busy}>Cancel</Btn>
+          <Btn accent onClick={submit} disabled={busy} fullWidth>
+            {busy ? "Confirming…" : "Register wallet"}
+          </Btn>
         </div>
       </div>
     </div>

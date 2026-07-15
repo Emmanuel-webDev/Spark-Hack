@@ -1,49 +1,42 @@
 "use client";
-import { C, fmt } from "../lib/tokens";
+import { C, NEU, fmt } from "../lib/tokens";
 
 export default function Tank({ balance, capacity, runway }) {
   const pct = Math.max(0, Math.min(1, balance / (capacity || 1))) * 100;
-  const ticks = Math.min(runway, 12);
+  const critical = runway < 5;
+  const fillColor = critical ? C.amber : C.accent;
+
   return (
-    <div className="flex items-end gap-4">
-      <div
-        className="relative rounded-md overflow-hidden"
-        style={{ width: 64, height: 168, background: C.panel2, border: `1px solid ${C.border}` }}
-      >
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} style={{ position: "absolute", left: 0, right: 0, top: `${(i + 1) * 16.6}%`, borderTop: `1px dashed ${C.borderSoft}` }} />
-        ))}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: `${pct}%`,
-            background: `linear-gradient(180deg, ${C.violet}, #5B4CC4)`,
-            transition: "height 700ms cubic-bezier(.4,1.2,.4,1)",
-          }}
-        />
+    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      {/* neumorphic vertical bar */}
+      <div style={{
+        width: 14, height: 110, background: C.base,
+        borderRadius: 8, boxShadow: NEU.inset,
+        position: "relative", overflow: "hidden", flexShrink: 0,
+      }}>
+        <div style={{
+          position: "absolute", left: 2, right: 2, bottom: 2,
+          height: `calc(${pct}% - 4px)`,
+          background: fillColor,
+          borderRadius: 6,
+          transition: "height 600ms cubic-bezier(0.16,1,0.3,1)",
+          boxShadow: `0 0 6px ${fillColor}88`,
+        }} />
       </div>
-      <div className="flex flex-col justify-end pb-1">
-        <div style={{ fontFamily: "'JetBrains Mono',monospace" }} className="text-3xl font-semibold">
-          <span style={{ color: C.text }}>{fmt(balance, 3)}</span>
+
+      <div>
+        <div style={{ fontFamily: "'Ragot',sans-serif", fontSize: 34, color: C.text1, letterSpacing: -1, lineHeight: 1 }}>
+          {fmt(balance, 3)}
         </div>
-        <div style={{ color: C.textFaint }} className="text-xs mb-3">
-          MON in depot tank
-        </div>
-        <div className="flex items-center gap-1.5">
-          {Array.from({ length: ticks }).map((_, i) => (
-            <div key={i} style={{ width: 5, height: 5, borderRadius: 99, background: C.violet }} />
-          ))}
-          {runway > 12 && (
-            <span style={{ color: C.textFaint }} className="text-xs ml-1">
-              +{runway - 12}
-            </span>
-          )}
-        </div>
-        <div style={{ color: C.textDim }} className="text-xs mt-1">
-          ≈ {runway} refuels of runway left
+        <div style={{ fontSize: 12, color: C.text3, marginTop: 4, fontWeight: 500 }}>MON in vault</div>
+        <div style={{
+          marginTop: 10, display: "inline-flex", alignItems: "center", gap: 7,
+          fontSize: 12, color: critical ? C.amber : C.text2, fontWeight: 600,
+          background: C.base, boxShadow: NEU.flat,
+          borderRadius: 20, padding: "5px 12px",
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: critical ? C.amber : C.green, display: "inline-block" }} />
+          ~{runway} refuels left
         </div>
       </div>
     </div>
