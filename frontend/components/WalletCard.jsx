@@ -7,9 +7,11 @@ import { contract } from "../lib/contract";
 import { C, NEU, fmt, short, timeAgo } from "../lib/tokens";
 import Gauge from "./Gauge";
 import { Btn } from "./UI";
+import { useToast } from "./Toast";
 
 export default function WalletCard({ address, onChange }) {
   const { isConnected } = useAccount();
+  const toast = useToast();
   const [copied, setCopied] = useState(false);
   const { writeContract, isPending } = useWriteContract();
 
@@ -33,12 +35,12 @@ export default function WalletCard({ address, onChange }) {
   const [eligible, reason] = eligibility || [false, ""];
 
   const status = !active
-    ? { text: "paused", color: C.text3 }
+    ? { text: "paused",      color: C.text3 }
     : low
     ? { text: "low balance", color: C.amber }
     : eligible
-    ? { text: "● ready", color: C.green }
-    : { text: "ok", color: C.text3 };
+    ? { text: "● ready",     color: C.green }
+    : { text: "ok",          color: C.text3 };
 
   function copy() {
     setCopied(true);
@@ -46,39 +48,56 @@ export default function WalletCard({ address, onChange }) {
     setTimeout(() => setCopied(false), 1200);
   }
 
+  function handleRefuel() {
+    if (!eligible) { toast({ message: reason || "Wallet not eligible for refuel.", type: "warn" }); return; }
+    writeContract(
+      { ...contract, functionName: "refuel", args: [address] },
+      {
+        onSuccess: () => toast({ message: `${short(address)} refueled successfully.`, type: "success" }),
+        onError: (e) => toast({ message: e.shortMessage || "Refuel failed.", type: "error" }),
+      }
+    );
+  }
+
+  function handleToggle() {
+    const fn = active ? "pauseWallet" : "resumeWallet";
+    writeContract(
+      { ...contract, functionName: fn, args: [address] },
+      {
+        onSuccess: () => toast({ message: `${short(address)} ${active ? "paused" : "resumed"}.`, type: "info" }),
+        onError: (e) => toast({ message: e.shortMessage || "Action failed.", type: "error" }),
+      }
+    );
+  }
+
+  function handleRemove() {
+    writeContract(
+      { ...contract, functionName: "removeWallet", args: [address] },
+      {
+        onSuccess: () => { toast({ message: `${short(address)} removed.`, type: "info" }); onChange?.(); },
+        onError: (e) => toast({ message: e.shortMessage || "Remove failed.", type: "error" }),
+      }
+    );
+  }
+
   return (
     <div style={{
       background: C.base, borderRadius: 20,
       boxShadow: low && active ? `8px 8px 16px #c4b0d0, -8px -8px 16px #ffffff, inset 0 0 0 2px ${C.amber}44` : NEU.raised,
       padding: 20, display: "flex", flexDirection: "column", gap: 16,
-      animation: "fadeup 220ms ease",
-      transition: "box-shadow 400ms",
+      animation: "fadeup 220ms ease", transition: "box-shadow 400ms",
     }}>
-      {/* header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <button onClick={copy} style={{
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-          fontFamily: "'DM Mono',monospace", fontSize: 12, color: C.text3,
-          display: "flex", alignItems: "center", gap: 5,
-        }}>
+        <button onClick={copy} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "'DM Mono',monospace", fontSize: 12, color: C.text3, display: "flex", alignItems: "center", gap: 5 }}>
           {short(address)} {copied ? <Check size={10} color={C.green} /> : <Copy size={10} />}
         </button>
-        <span style={{ fontSize: 11, fontWeight: 700, color: status.color, letterSpacing: "0.03em" }}>
-          {status.text}
-        </span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: status.color, letterSpacing: "0.03em" }}>{status.text}</span>
       </div>
 
-      {/* gauge in neumorphic inset well */}
-      <div style={{
-        background: C.base, borderRadius: 16,
-        boxShadow: NEU.inset,
-        padding: "12px 8px 8px",
-        display: "flex", justifyContent: "center",
-      }}>
+      <div style={{ background: C.base, borderRadius: 16, boxShadow: NEU.inset, padding: "12px 8px 8px", display: "flex", justifyContent: "center" }}>
         <Gauge balance={balance} threshold={threshold} max={(threshold + refillAmount) * 1.4} />
       </div>
 
-      {/* policy rows */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 0", fontSize: 12 }}>
         {[
           ["threshold", `${fmt(threshold, 3)} MON`],
@@ -98,26 +117,14 @@ export default function WalletCard({ address, onChange }) {
         </div>
       </div>
 
-      {/* action buttons in inset tray */}
-      <div style={{
-        background: C.base, borderRadius: 12,
-        boxShadow: NEU.insetSm,
-        padding: "8px 10px",
-        display: "flex", gap: 8,
-      }}>
-        <Btn small accent
-          onClick={() => writeContract({ ...contract, functionName: "refuel", args: [address] })}
-          disabled={!isConnected || !eligible || isPending}>
+      <div style={{ background: C.base, borderRadius: 12, boxShadow: NEU.insetSm, padding: "8px 10px", display: "flex", gap: 8 }}>
+        <Btn small accent onClick={handleRefuel} disabled={!isConnected || isPending}>
           <Zap size={11} /> Refuel
         </Btn>
-        <Btn small
-          onClick={() => writeContract({ ...contract, functionName: active ? "pauseWallet" : "resumeWallet", args: [address] })}
-          disabled={!isConnected || isPending}>
+        <Btn small onClick={handleToggle} disabled={!isConnected || isPending}>
           {active ? <Pause size={11} /> : <Play size={11} />}
         </Btn>
-        <Btn small danger
-          onClick={() => { writeContract({ ...contract, functionName: "removeWallet", args: [address] }); onChange?.(); }}
-          disabled={!isConnected || isPending}>
+        <Btn small danger onClick={handleRemove} disabled={!isConnected || isPending}>
           <Trash2 size={11} />
         </Btn>
       </div>

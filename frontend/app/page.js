@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { useConnectWithNetwork } from "../lib/useConnectWithNetwork";
+import { useToast } from "../components/Toast";
 
 export default function LandingPage() {
   const router = useRouter();
   const { isConnected } = useAccount();
-  const { handleConnect, isPending, error } = useConnectWithNetwork();
+  const toast = useToast();
+  const { handleConnect, isPending } = useConnectWithNetwork(toast);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -15,7 +17,6 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5EBFA", display: "flex", flexDirection: "column" }}>
-
       {/* Nav */}
       <nav style={{ padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #D4C4DF", background: "#F5EBFA" }}>
         <span style={{ fontFamily: "'Ragot',sans-serif", fontSize: 24, color: "#49225B", letterSpacing: -0.5 }}>Refilr</span>
@@ -52,9 +53,6 @@ export default function LandingPage() {
               <button className="cta-btn" onClick={handleConnect} disabled={isPending}>
                 {isPending ? "Connecting…" : "Connect wallet to start"}
               </button>
-            )}
-            {error && (
-              <p style={{ color: "#8b2a2a", fontSize: 12, marginTop: 10 }}>{error}</p>
             )}
           </div>
         </div>
@@ -94,7 +92,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Security callout */}
+        {/* Security */}
         <div id="security" style={{ background: "#49225B", borderRadius: 8, padding: "40px", marginBottom: 64, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
           <div>
             <div style={{ fontFamily: "'Ragot',sans-serif", fontSize: "clamp(22px,3vw,34px)", color: "#fff", letterSpacing: -0.5, marginBottom: 8 }}>
@@ -112,7 +110,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer style={{ borderTop: "1px solid #D4C4DF", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <span style={{ fontFamily: "'Ragot',sans-serif", fontSize: 18, color: "#49225B" }}>Refilr</span>
         <span className="mono" style={{ fontSize: 11, color: "#A56ABD" }}>Monad Testnet · not audited · use test funds only</span>
